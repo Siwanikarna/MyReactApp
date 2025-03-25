@@ -82,5 +82,5 @@ jobs:
         with:
           app-name: 'siwkapp'
           slot-name: 'Production'
-          package: release.zip
+          package: backend
           
