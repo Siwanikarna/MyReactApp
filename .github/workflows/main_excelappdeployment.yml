@@ -1,4 +1,4 @@
-name: Build and deploy Python app to Azure Web App - ExcelApp
+name: Build and deploy Python app to Azure Web App - excelappdeployment
 
 on:
   push:
@@ -31,16 +31,18 @@ jobs:
           cd MyReactApp/backend
           pip install -r requirements.txt
 
-      - name: Zip artifact for deployment (excluding venv)
+      - name: Zip artifact for deployment
         run: |
           cd MyReactApp/backend
-          zip -r ../../release.zip ./* -x "venv/*"
+          zip -r ../../release.zip ./*
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -59,7 +61,7 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d backend
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -68,10 +70,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0C5F46C96D194C21BF62F49B09C1E7C0 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_ED0F23C4D840424983411AAEEE0C6F8A }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'ExcelApp'
+          app-name: 'excelappdeployment'
           slot-name: 'Production'
-          package: .
+          package: backend
