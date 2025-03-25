@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - SiwaniApp
+name: Build and deploy Python app to Azure Web App - SiwaniApp (Backend)
 
 on:
   push:
@@ -22,28 +22,32 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.10' # Python 3.13 might not be stable, using 3.10 for compatibility
 
-      - name: Create and start virtual environment
+      - name: Navigate to Backend and Set Up Virtual Environment
         run: |
+          cd backend
           python -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          cd backend
+          pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          cd backend
+          zip -r ../../release.zip ./*
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
-          name: python-app
-          path: |
-            release.zip
-            !venv/
+          name: backend-app
+          path: release.zip 
+             
 
   deploy:
     runs-on: ubuntu-latest
@@ -59,18 +63,17 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: python-app
+          name: python-app 
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d backend
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CF7CF79E76614ABF9972E78D1872144E }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6A5342E0E4E74ADEBF3F9F6A22D2CFAC }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C8215F55DB4749CF888BFA24D5F9AA0F }}
+          client-id: ${{ secrets.BACKEND_CLIENT_ID }}
+          tenant-id: ${{ secrets.BACKEND_TENANT_ID }}
+          subscription-id: ${{ secrets.BACKEND_SUBSCRIPTION_ID }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -78,4 +81,4 @@ jobs:
         with:
           app-name: 'SiwaniApp'
           slot-name: 'Production'
-          
+          package: backend
